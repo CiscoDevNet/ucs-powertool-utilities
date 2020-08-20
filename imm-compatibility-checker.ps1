@@ -98,8 +98,11 @@ class CompatibilityTest {
             # check every element 
             foreach ($comp in $components) {
                 # retrieve description
-                # $elemDesc = $script:EquipmentManDef | ? { $_.Sku -ieq $($comp.Model) } | Select -ExpandProperty Description
-                $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($comp.Model)"} | Select -ExpandProperty Description
+                if ('Model' -in $comp.PSobject.Properties.Name) {
+                    $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($comp.Model)"} | Select -ExpandProperty Description
+                } else {
+                    $elemDesc = ''
+                }
 
                 # this component's "attribute" must match one of the specified values
                 $flag = $false
@@ -128,6 +131,32 @@ class CompatibilityTest {
 # =============================================================================
 # INITIALIZE
 # -----------------------------------------------------------------------------
+
+# Load UCS Powershell Modules
+Import-Module Cisco.UcsManager
+
+try {
+    # Login to UCS Domain with supplied Envrionment variables if passed
+    if ($env:UCS_HOST -and $env:UCS_USERNAME -and $env:UCS_PASSWORD) {
+        $password = ConvertTo-SecureString "$env:UCS_PASSWORD" -AsPlainText -Force
+        $credential = New-Object System.Management.Automation.PSCredential ($env:UCS_USERNAME, $password)
+        $handle = Connect-Ucs -Name $env:UCS_HOST -Credential $credential
+    }
+    else {
+        # Connect interactively if required environment variables are not set
+        Write-Host ""
+        $hostname = Read-Host "UCSM Hostname or IP"
+        $username = Read-Host "username"
+        $password = Read-Host "password" -AsSecureString
+        $credential = New-Object System.Management.Automation.PSCredential ($username, $password)
+        $handle = Connect-Ucs -Name $hostname -Credential $credential
+    }
+}
+catch [Exception] {
+    $message = "Error connecting to UCS Domain using supplied credentials"
+    Write-Host -ForegroundColor DarkRed $message
+    $message | Out-File $outputCsvFilename
+}
 
 # initialize progress bar
 Write-Progress -Id 1 -Activity "Starting..." -Status " " -PercentComplete 1
@@ -193,3 +222,6 @@ else {
 }
 # if there are no incompatibilities, this will create an empty CSV
 $logList | Export-Csv $outputCsvFilename -NoTypeInformation
+
+# Disconnect from UCS
+$handle = Disconnect-Ucs

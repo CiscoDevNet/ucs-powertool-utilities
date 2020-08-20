@@ -67,5 +67,14 @@
             "UCSC-MLOM-C25Q-04", 
             "UCSC-PCIE-C25Q-04"
         ]
+    },
+    {
+        "description": "Rack servers must use single wire management",
+        "cmdlet": "Get-UcsRackUnit | Get-UcsMgmtController | Get-UcsMgmtConnection",
+        "attribute": "Type",
+        "operation": "or",
+        "value": [
+            "sideband"
+        ]
     }
 ]
