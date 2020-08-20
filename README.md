@@ -27,11 +27,11 @@ Install-Module Cisco.UCSManager
 
 To run the compatibility checker, set three environment variables:
 
-`UCS_HOST`: The virtual IP (VIP) or DNS name for UCS Manager.
+`UCS_HOST`: The virtual IP (VIP) or DNS name for UCS Manager
 
-`UCS_USERNAME`: Your UCS Manager username.
+`UCS_USERNAME`: Your UCS Manager username
 
-`UCS_PASSWORD`: Your UCS Manager password.
+`UCS_PASSWORD`: Your UCS Manager password
 
 If those three environment variables are not properly set, you will be prompted for that information at runtime.
 
@@ -45,4 +45,4 @@ Simply type the following command and a progress bar will keep you informed of t
 
 Whether you run the script natively or through Docker, it will produce a file (`log.csv`) listing every component analyzed and the result of the analysis. Any item whose `Compatible` column is not marked as `TRUE` must be remediated prior to attempting to migrate to IMM.
 
-Each hardware component will be identified by its Dn (distinguished name) and serial number. Each software components will be identified by the hardware on which it resides.
+Each hardware component will be identified by its Dn (distinguished name) and serial number. Each software component will be identified by the hardware on which it resides.
