@@ -1,5 +1,5 @@
 ## Docker Instructions
----
+
 ### Build and Run the Container
 
 If you wish to build the Docker image to run the compatibility check follow these steps:
