@@ -7,10 +7,10 @@
 .INPUTS
     None
 .OUTPUTS
-     A CSV file named incompatible.csv contains a list of elements that do not
-     meet the minimum requirements for IMM.
+     A CSV file containing every element inspected and whether or not it meets
+     the IMM compatibility requirements.
 .NOTES
-    Version:        0.1
+    Version:        0.2
     Authors:        Doron Chosnek
                     Brandon Beck
     Creation Date:  August 2020
@@ -21,21 +21,23 @@
 [cmdletbinding()] param()
 
 
-<# =========================================================================
-   GLOBALS
-   ------------------------------------------------------------------------- #>
+# =============================================================================
+# GLOBALS
+# -----------------------------------------------------------------------------
 $script:configFilePath = './config'
-$script:outputCsvFilename = 'incompatible.csv'
+$script:outputCsvFilename = 'log.csv'
 
 
-<# =========================================================================
-   CLASS DEFINITIONS
-   ------------------------------------------------------------------------- #>
+# =============================================================================
+# CLASS DEFINITIONS
+# -----------------------------------------------------------------------------
 
 # Class representing an individual UCS Component like a blade or adapter. This
 # is a very simple class and a list of these elements will be used to populate
 # a CSV file of incompatible elements when this script concludes.
 class UcsComponent {
+    [bool]$Compatible
+    [string]$TestPerformed
     [string]$Dn
     [string]$Model
     [string]$Serial
@@ -43,15 +45,19 @@ class UcsComponent {
       
     # constructor for new instances of the Class
     UcsComponent(
+        [bool]$Compatible,
         [string]$Dn,
         [string]$Model,
         [string]$Serial,
-        [string]$Desc
+        [string]$Desc,
+        [string]$TestName
     ) {
+        $this.Compatible = $Compatible
         $this.Dn = $Dn
         $this.Model = $Model
         $this.Serial = $Serial
         $this.Desc = $Desc
+        $this.TestPerformed = $TestName
     }
 }
       
@@ -61,7 +67,7 @@ class CompatibilityTest {
     [string]$Cmdlet
     [string]$Attribute
     [string]$Operation
-    [string]$Value
+    [string[]]$Value
     [bool]$Pass
       
     # constructor for new instances of the Class
@@ -70,7 +76,7 @@ class CompatibilityTest {
         [string]$cmd,
         [string]$attr,
         [string]$oper,
-        [string]$value
+        [string[]]$value
 
     ) {
         $this.Description = $desc
@@ -84,50 +90,62 @@ class CompatibilityTest {
     # this is the method that actually runs the compatibility check and returns
     # any components that do not meet the compatiblity checks
     [UcsComponent[]] Compare(){
-        $rejects = @()
+        $results = @()
         $components = Invoke-Expression $this.Cmdlet
 
         if ($this.Operation -eq "or") {
+
             # check every element 
             foreach ($comp in $components) {
+                # retrieve description
+                $elemDesc = $script:EquipmentManDef | ? { $_.Sku -ieq $($comp.Model) } | Select -ExpandProperty Description
+
                 # this component's "attribute" must match one of the specified values
                 $flag = $false
                 foreach ($val in $this.Value) {
-                    if ($val[$this.Attribute] -eq $val) { $flag = $true }
+                    if ($comp.($this.Attribute) -eq $val) { $flag = $true }
                 }
-                # if component attribute does not match any of the values then
-                # we add it to the list of incompatible components
-                if (-not $flag) {
-                    $rejects += [UcsComponent]::new(
-                        $comp.Dn,
-                        $comp.Model,
-                        $comp.Serial,
-                        $comp.Desc
-                    )
-                }
+
+                $results += [UcsComponent]::new(
+                    $flag,
+                    $comp.Dn,
+                    $comp.Model,
+                    $comp.Serial,
+                    $elemDesc,
+                    $this.Description
+                )
             }
         }
         else {
             throw "$($this.Operation) is an unsupported operation type."
         }
-        return $rejects
+        return $results
     }
 
 }
 
-<# =========================================================================
-   MAIN
-   ------------------------------------------------------------------------- #>
+# =============================================================================
+# INITIALIZE
+# -----------------------------------------------------------------------------
 
+# initialize progress bar
+Write-Progress -Id 1 -Activity "Starting..." -Status " " -PercentComplete 1
+
+# retrieve all JSON files from the subdirectory
 $filenames = Get-ChildItem -Path $configFilePath -Filter '*.json'
 Write-Verbose -Message "$($filenames.Count) config files located."
 
 # create empty list of incompatibilities
-$incompatible = @()
+$logList = @()
 
-# initialize progress bar
-Write-Progress -Id 1 -Activity "initial state" -Status " " -PercentComplete 20
-Start-Sleep -Seconds 2
+# get manufacturing definition of all UCS components so we can populate a
+# detailed description for each component we encounter
+$script:EquipmentManDef = Get-UcsEquipmentManufacturingDef
+
+
+# =============================================================================
+# MAIN
+# -----------------------------------------------------------------------------
 
 foreach ($fname in $filenames) {
     
@@ -141,7 +159,7 @@ foreach ($fname in $filenames) {
         $percent = $counter * 100 / $all_checks.Count
         Write-Progress -Id 1 -Activity $activity -Status $status -PercentComplete $percent
         $counter += 1
-        
+
         # create a new check/test instance
         $current = [CompatibilityTest]::new(
             $check."description",
@@ -152,17 +170,21 @@ foreach ($fname in $filenames) {
         )
 
         # run the check/test operation
-        $incompatible += $current.Compare()
+        $logList += $current.Compare()
     }
 }
 
+# close the progress bar
+Write-Progress -Id 1 -Activity " " -Completed
+
 # create output
-if ($incompatible.Count -eq 0) {
-    Write-Host -ForegroundColor Green "No incompatibilities found!"
+$failure_counter = ($logList | Where-Object { -not $_.Compatible }).Count
+if ($failure_counter -eq 0) {
+    Write-Host -ForegroundColor Green "No incompatibilities found! Log saved as $outputCsvFilename"
 }
 else {
-    $message = "$($incompatible.Count) incompatibilities found and saved in $outputCsvFilename."
+    $message = "$($failure_counter) incompatibilities found and saved in $outputCsvFilename."
     Write-Host -ForegroundColor DarkRed $message
 }
 # if there are no incompatibilities, this will create an empty CSV
-$incompatible | Export-Csv $outputCsvFilename -NoTypeInformation
+$logList | Export-Csv $outputCsvFilename -NoTypeInformation
