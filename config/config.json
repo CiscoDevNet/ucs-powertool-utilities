@@ -1,6 +1,6 @@
 [
     {
-        "description": "Fabric Interconnects must be gen 4",
+        "description": "Fabric Interconnects must be 6454",
         "cmdlet": "Get-UcsFiModule",
         "attribute": "Model",
         "operation": "or",
@@ -49,13 +49,21 @@
         ]
     },
     {
-        "description": "Server adaptors must be specific VIC models",
-        "cmdlet": "Get-UcsAdaptorUnit",
+        "description": "Blade adaptors must be specific VIC models",
+        "cmdlet": "Get-UcsBlade | Get-UcsAdaptorUnit",
         "attribute": "Model",
         "operation": "or",
         "value": [
             "UCSB-MLOM-40G-04",
-            "UCSB-VIC-M84-4P",
+            "UCSB-VIC-M84-4P"
+        ]
+    },
+    {
+        "description": "Rack server adaptors must be specific VIC models",
+        "cmdlet": "Get-UcsRackUnit | Get-UcsAdaptorUnit",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
             "UCSC-MLOM-C25Q-04", 
             "UCSC-PCIE-C25Q-04"
         ]
