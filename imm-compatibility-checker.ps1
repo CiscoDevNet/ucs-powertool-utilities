@@ -128,6 +128,7 @@ class CompatibilityTest {
             foreach ($comp in $components) {
                 # retrieve description
                 if (-not ('Model' -in $comp.PSobject.Properties.Name)) {
+                    # check if parent object contains a Model
                     $parent = $comp | Get-UcsParent
                     if ('Model' -in $parent.PSobject.Properties.Name) {
                         $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($parent.Model)"} | Select -ExpandProperty Description
@@ -179,7 +180,9 @@ try {
         $credential = New-Object System.Management.Automation.PSCredential ($env:UCS_USERNAME, $password)
         Write-Host "Connecting to UCS Manager..."
         Write-Progress -Activity "Running IMM compatibility checks" -Status "Starting" -PercentComplete 0
-        $handle = Connect-Ucs -Name $env:UCS_HOST -Credential $credential
+        $handle = Connect-Ucs -Name $env:UCS_HOST -Credential $credential -ErrorAction Stop
+        #--- Checks that handle actually exists ---#
+		Get-UcsStatus -Ucs $handle | Out-Null
     }
     else {
         # Connect interactively if required environment variables are not set
@@ -191,12 +194,15 @@ try {
         Write-Host "Connecting to UCS Manager..."
         Write-Progress -Activity "Running IMM compatibility checks" -Status "Starting" -PercentComplete 0
         $handle = Connect-Ucs -Name $hostname -Credential $credential
+        #--- Checks that handle actually exists ---#
+		Get-UcsStatus -Ucs $handle | Out-Null
     }
 }
 catch [Exception] {
     $message = "Error connecting to UCS Domain using supplied credentials"
     Write-Host -ForegroundColor DarkRed $message
     $message | Out-File $outputCsvFilename
+    Exit
 }
 
 Clear-Host
