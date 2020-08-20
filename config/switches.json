@@ -1,0 +1,21 @@
+[
+    {
+        "description": "Fabric Interconnects must be gen 4",
+        "cmdlet": "Get-UcsFiModule",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCS-FI-6248UP"
+        ]
+    },
+    {
+        "description": "Blades must be B200 M5 or B480 M5",
+        "cmdlet": "Get-UcsBlade",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCSB-B200-M5",
+            "UCSB-B200-M4"
+        ]
+    }
+]
