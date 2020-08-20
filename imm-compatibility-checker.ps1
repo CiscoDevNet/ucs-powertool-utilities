@@ -120,6 +120,43 @@ class CompatibilityTest {
                 )
             }
         }
+        elseif ($this.Operation -match "ge") {
+            $elemDesc = ''
+            $model = ''
+            $serial = ''
+            # check every element
+            foreach ($comp in $components) {
+                # retrieve description
+                if (-not ('Model' -in $comp.PSobject.Properties.Name)) {
+                    $parent = $comp | Get-UcsParent
+                    if ('Model' -in $parent.PSobject.Properties.Name) {
+                        $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($parent.Model)"} | Select -ExpandProperty Description
+                        $model = $parent.Model
+                        $serial = $parent.serial
+                    }
+                }
+                else {
+                    $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($comp.Model)"} | Select -ExpandProperty Description
+                    $model = $comp.Model
+                    $serial = $comp.serial
+                }
+
+                # this component's "attribute" must match one of the specified values
+                $flag = $false
+                foreach ($val in $this.Value) {
+                    if ($comp.($this.Attribute) -ge $val) { $flag = $true }
+                }
+
+                $results += [UcsComponent]::new(
+                    $flag,
+                    $comp.Dn,
+                    $model,
+                    $serial,
+                    $elemDesc,
+                    $this.Description
+                )
+            }
+        }
         else {
             throw "$($this.Operation) is an unsupported operation type."
         }
@@ -140,6 +177,8 @@ try {
     if ($env:UCS_HOST -and $env:UCS_USERNAME -and $env:UCS_PASSWORD) {
         $password = ConvertTo-SecureString "$env:UCS_PASSWORD" -AsPlainText -Force
         $credential = New-Object System.Management.Automation.PSCredential ($env:UCS_USERNAME, $password)
+        Write-Host "Connecting to UCS Manager..."
+        Write-Progress -Activity "Running IMM compatibility checks" -Status "Starting" -PercentComplete 0
         $handle = Connect-Ucs -Name $env:UCS_HOST -Credential $credential
     }
     else {
@@ -149,6 +188,8 @@ try {
         $username = Read-Host "username"
         $password = Read-Host "password" -AsSecureString
         $credential = New-Object System.Management.Automation.PSCredential ($username, $password)
+        Write-Host "Connecting to UCS Manager..."
+        Write-Progress -Activity "Running IMM compatibility checks" -Status "Starting" -PercentComplete 0
         $handle = Connect-Ucs -Name $hostname -Credential $credential
     }
 }
@@ -158,8 +199,8 @@ catch [Exception] {
     $message | Out-File $outputCsvFilename
 }
 
-# initialize progress bar
-Write-Progress -Id 1 -Activity "Starting..." -Status " " -PercentComplete 1
+Clear-Host
+Write-Progress -Activity "Running IMM compatibility checks" -Status "Initializating" -PercentComplete 0
 
 # retrieve all JSON files from the subdirectory
 $filenames = Get-ChildItem -Path $configFilePath -Filter '*.json'
@@ -178,7 +219,6 @@ $script:EquipmentManDef = Get-UcsEquipmentManufacturingDef
 # -----------------------------------------------------------------------------
 
 foreach ($fname in $filenames) {
-    
     $all_checks = Get-Content -Raw $fname | ConvertFrom-Json
     $counter = 0
     foreach ($check in $all_checks) {
@@ -187,7 +227,7 @@ foreach ($fname in $filenames) {
         $activity = "Running tests from config file $($fname.Name)"
         $status = "Running check $($check.description)"
         $percent = $counter * 100 / $all_checks.Count
-        Write-Progress -Id 1 -Activity $activity -Status $status -PercentComplete $percent
+        Write-Progress -Activity $activity -Status $status -PercentComplete $percent
         $counter += 1
         
         # create a new check/test instance
