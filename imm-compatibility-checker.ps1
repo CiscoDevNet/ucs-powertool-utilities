@@ -98,7 +98,8 @@ class CompatibilityTest {
             # check every element 
             foreach ($comp in $components) {
                 # retrieve description
-                $elemDesc = $script:EquipmentManDef | ? { $_.Sku -ieq $($comp.Model) } | Select -ExpandProperty Description
+                # $elemDesc = $script:EquipmentManDef | ? { $_.Sku -ieq $($comp.Model) } | Select -ExpandProperty Description
+                $elemDesc = $script:EquipmentManDef | ? {$_.Dn -imatch "$($comp.Model)"} | Select -ExpandProperty Description
 
                 # this component's "attribute" must match one of the specified values
                 $flag = $false
@@ -159,7 +160,7 @@ foreach ($fname in $filenames) {
         $percent = $counter * 100 / $all_checks.Count
         Write-Progress -Id 1 -Activity $activity -Status $status -PercentComplete $percent
         $counter += 1
-
+        
         # create a new check/test instance
         $current = [CompatibilityTest]::new(
             $check."description",
@@ -167,13 +168,17 @@ foreach ($fname in $filenames) {
             $check."attribute",
             $check."operation",
             $check."value"
-        )
-
-        # run the check/test operation
-        $logList += $current.Compare()
+            )
+            
+            # run the check/test operation
+            $logList += $current.Compare()
+        }
     }
-}
+    
 
+# =============================================================================
+# OUTPUT
+# -----------------------------------------------------------------------------
 # close the progress bar
 Write-Progress -Id 1 -Activity " " -Completed
 
