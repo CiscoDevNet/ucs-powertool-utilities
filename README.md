@@ -17,7 +17,7 @@ You can run the this script as a Docker container by following the instructions 
 
 ### Minimum requirements
 
-You'll need Powershell for Windows 7.0 or later *or* Powershell Core 7.0 or later. Install the Cisco PowerTool module from PSGallery:
+You'll need Powershell for Windows 5.1 or later *or* Powershell Core 7.0 or later. Install the Cisco PowerTool module from PSGallery:
 
 ```powershell
 Install-Module Cisco.UCSManager
