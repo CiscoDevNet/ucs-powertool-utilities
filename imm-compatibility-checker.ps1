@@ -24,7 +24,7 @@
 # =============================================================================
 # GLOBALS
 # -----------------------------------------------------------------------------
-$script:configFilePath = './config'
+$script:configFileFilter = './config/*.json'
 $script:outputCsvFilename = 'log.csv'
 
 
@@ -207,7 +207,7 @@ Write-Progress -Activity "Running IMM compatibility checks" -Status "Initializat
 
 # retrieve all JSON files from the subdirectory
 try {
-    $filenames = Get-ChildItem -Path $configFilePath -Filter '*.json'
+    $filenames = Get-ChildItem -Filter $configFileFilter
 }
 catch {
     Write-Host -ForegroundColor DarkRed "Could not locate any config files in the '$configFilePath' path."
