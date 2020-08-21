@@ -4,9 +4,7 @@
         "cmdlet": "Get-UcsNetworkElement | Measure-Object",
         "attribute": "Count",
         "operation": "ge",
-        "value": [
-            "2"
-        ]
+        "value": "2"
     },
     {
         "description": "Fabric Interconnects must be 6454",
@@ -91,26 +89,20 @@
         "cmdlet": "Get-UcsNetworkElement | Get-UcsFirmwareStatus",
         "attribute": "PackageVersion",
         "operation": "ge",
-        "value": [
-            "4.1(2)"
-        ]
+        "value": "4.1(2)"
     },
     {
         "description": "Servers must be running firmware 4.1(2) or greater",
         "cmdlet": "Get-UcsServer | Get-UcsFirmwareStatus",
         "attribute": "PackageVersion",
         "operation": "ge",
-        "value": [
-            "4.1(2)"
-        ]
+        "value": "4.1(2)"
     },
     {
         "description": "Adaptors must be running firmware 4.1(2) or greater",
         "cmdlet": "Get-UcsServer | Get-UcsAdaptorUnit | Get-UcsMgmtController | Get-UcsFirmwareRunning -Deployment system",
         "attribute": "PackageVersion",
         "operation": "ge",
-        "value": [
-            "4.1(2)"
-        ]
+        "value": "4.1(2)"
     }
 ]
