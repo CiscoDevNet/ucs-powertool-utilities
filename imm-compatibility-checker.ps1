@@ -24,7 +24,7 @@
 # =============================================================================
 # GLOBALS
 # -----------------------------------------------------------------------------
-$script:configFileFilter = './config/*.json'
+$script:configFileFilter = 'config/*.json'
 $script:outputCsvFilename = 'log.csv'
 
 
@@ -202,7 +202,7 @@ catch [Exception] {
     Exit
 }
 
-Clear-Host
+# Clear-Host
 Write-Progress -Activity "Running IMM compatibility checks" -Status "Initializating" -PercentComplete 0
 
 # retrieve all JSON files from the subdirectory
@@ -227,7 +227,7 @@ $script:EquipmentManDef = Get-UcsEquipmentManufacturingDef
 # -----------------------------------------------------------------------------
 
 foreach ($fname in $filenames) {
-    $all_checks = Get-Content -Raw $fname | ConvertFrom-Json
+    $all_checks = Get-Content -Raw $fname.FullName | ConvertFrom-Json
     $counter = 0
     foreach ($check in $all_checks) {
         
