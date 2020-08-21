@@ -1,5 +1,14 @@
 [
     {
+        "description": "Fabric Interconnects must be deployed as a pair",
+        "cmdlet": "Get-UcsNetworkElement | Measure-Object",
+        "attribute": "Count",
+        "operation": "ge",
+        "value": [
+            "2"
+        ]
+    },
+    {
         "description": "Fabric Interconnects must be 6454",
         "cmdlet": "Get-UcsFiModule",
         "attribute": "Model",
