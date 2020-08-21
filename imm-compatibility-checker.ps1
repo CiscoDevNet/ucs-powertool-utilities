@@ -142,11 +142,8 @@ class CompatibilityTest {
                     $serial = $comp.serial
                 }
 
-                # this component's "attribute" must match one of the specified values
-                $flag = $false
-                foreach ($val in $this.Value) {
-                    if ($comp.($this.Attribute) -ge $val) { $flag = $true }
-                }
+                # this component's "attribute" must match be >= "value"
+                $flag = ([string]$comp.($this.Attribute) -ge [string]$this.Value)
 
                 $results += [UcsComponent]::new(
                     $flag,
@@ -209,7 +206,12 @@ Clear-Host
 Write-Progress -Activity "Running IMM compatibility checks" -Status "Initializating" -PercentComplete 0
 
 # retrieve all JSON files from the subdirectory
-$filenames = Get-ChildItem -Path $configFilePath -Filter '*.json'
+try {
+    $filenames = Get-ChildItem -Path $configFilePath -Filter '*.json'
+}
+catch {
+    Write-Host -ForegroundColor DarkRed "Could not locate any config files in the '$configFilePath' path."
+}
 Write-Verbose -Message "$($filenames.Count) config files located."
 
 # create empty list of incompatibilities
@@ -255,19 +257,24 @@ foreach ($fname in $filenames) {
 # OUTPUT
 # -----------------------------------------------------------------------------
 # close the progress bar
-Write-Progress -Id 1 -Activity " " -Completed
+Write-Progress -Activity " " -Status " " -PercentComplete 100
 
 # create output
-$failure_counter = ($logList | Where-Object { -not $_.Compatible }).Count
-if ($failure_counter -eq 0) {
-    Write-Host -ForegroundColor Green "No incompatibilities found! Log saved as $outputCsvFilename"
+if ($filenames.Count -gt 0) {
+    $failure_counter = ($logList | Where-Object { -not $_.Compatible }).Count
+    if ($failure_counter -eq 0) {
+        Write-Host -ForegroundColor Green "No incompatibilities found! Log saved as $outputCsvFilename"
+    }
+    else {
+        $message = "$($failure_counter) incompatibilities found and saved in $outputCsvFilename."
+        Write-Host -ForegroundColor DarkRed $message
+    }
+    # if there are no incompatibilities, this will create an empty CSV
+    $logList | Export-Csv $outputCsvFilename -NoTypeInformation
 }
 else {
-    $message = "$($failure_counter) incompatibilities found and saved in $outputCsvFilename."
-    Write-Host -ForegroundColor DarkRed $message
+    Write-Host "No checks performed because no config files were found."
 }
-# if there are no incompatibilities, this will create an empty CSV
-$logList | Export-Csv $outputCsvFilename -NoTypeInformation
 
 # Disconnect from UCS
 $handle = Disconnect-Ucs
