@@ -1,0 +1,108 @@
+[
+    {
+        "description": "Fabric Interconnects must be deployed as a pair",
+        "cmdlet": "Get-UcsNetworkElement | Measure-Object",
+        "attribute": "Count",
+        "operation": "ge",
+        "value": "2"
+    },
+    {
+        "description": "Fabric Interconnects must be 6454",
+        "cmdlet": "Get-UcsFiModule",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCS-FI-6454"
+        ]
+    },
+    {
+        "description": "Chassis must be gen 1 or gen 2",
+        "cmdlet": "Get-UcsChassis",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "N20-C6508",
+            "UCSB-5108-AC2"
+        ]
+    },
+    {
+        "description": "IOM must be 2204 or 2208",
+        "cmdlet": "Get-UcsIom",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCS-IOM-2204XP",
+            "UCS-IOM-2208XP"
+        ]
+    },
+    {
+        "description": "Blades must be B200/480 M5",
+        "cmdlet": "Get-UcsBlade",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCSB-B200-M5"
+        ]
+    },
+    {
+        "description": "Rack servers must be C220/240/480 M5",
+        "cmdlet": "Get-UcsRackUnit",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCSC-C220-M5",
+            "UCSC-C240-M5",
+            "UCSC-C480-M5"
+        ]
+    },
+    {
+        "description": "Blade adaptors must be specific VIC models",
+        "cmdlet": "Get-UcsBlade | Get-UcsAdaptorUnit",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCSB-MLOM-40G-04",
+            "UCSB-VIC-M84-4P"
+        ]
+    },
+    {
+        "description": "Rack server adaptors must be specific VIC models",
+        "cmdlet": "Get-UcsRackUnit | Get-UcsAdaptorUnit",
+        "attribute": "Model",
+        "operation": "or",
+        "value": [
+            "UCSC-MLOM-C25Q-04", 
+            "UCSC-PCIE-C25Q-04"
+        ]
+    },
+    {
+        "description": "Rack servers must use single wire management",
+        "cmdlet": "Get-UcsRackUnit | Get-UcsMgmtController | Get-UcsMgmtConnection",
+        "attribute": "Type",
+        "operation": "or",
+        "value": [
+            "sideband"
+        ]
+    },
+    {
+        "description": "Fabric Interconnects must be running firmware 4.1(2) or greater",
+        "cmdlet": "Get-UcsNetworkElement | Get-UcsFirmwareStatus",
+        "attribute": "PackageVersion",
+        "operation": "ge",
+        "value": "4.1(2)"
+    },
+    {
+        "description": "Servers must be running firmware 4.1(2) or greater",
+        "cmdlet": "Get-UcsServer | Get-UcsFirmwareStatus",
+        "attribute": "PackageVersion",
+        "operation": "ge",
+        "value": "4.1(2)"
+    },
+    {
+        "description": "Adaptors must be running firmware 4.1(2) or greater",
+        "cmdlet": "Get-UcsServer | Get-UcsAdaptorUnit | Get-UcsMgmtController | Get-UcsFirmwareRunning -Deployment system",
+        "attribute": "PackageVersion",
+        "operation": "ge",
+        "value": "4.1(2)"
+    }
+]
