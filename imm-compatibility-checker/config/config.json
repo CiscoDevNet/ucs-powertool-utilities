@@ -26,13 +26,14 @@
         ]
     },
     {
-        "description": "IOM must be 2204 or 2208",
+        "description": "IOM must be 2204, 2208, or 2408",
         "cmdlet": "Get-UcsIom",
         "attribute": "Model",
         "operation": "or",
         "value": [
             "UCS-IOM-2204XP",
-            "UCS-IOM-2208XP"
+            "UCS-IOM-2208XP",
+            "UCS-IOM-2408"
         ]
     },
     {
