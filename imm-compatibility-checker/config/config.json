@@ -7,12 +7,13 @@
         "value": "2"
     },
     {
-        "description": "Fabric Interconnects must be 6454",
+        "description": "Fabric Interconnects must be 6400 series",
         "cmdlet": "Get-UcsFiModule",
         "attribute": "Model",
         "operation": "or",
         "value": [
-            "UCS-FI-6454"
+            "UCS-FI-6454",
+            "UCS-FI-64108"
         ]
     },
     {
